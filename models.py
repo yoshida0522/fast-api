@@ -9,6 +9,7 @@ class User(BaseModel):
 
 class Task(BaseModel):
     title: str
+    Implementation_date: str
     description: Optional[str] = None
     completed: bool = False
 

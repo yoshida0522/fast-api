@@ -53,7 +53,7 @@ def create_task(collection: Collection, task: Task):
 
 def get_tasks(collection: Collection):
     tasks = collection.find()
-    return [{"id": str(task["_id"]), "title": task["title"], "description": task.get("description", ""), "completed": task["completed"]} for task in tasks]
+    return [{"id": str(task["_id"]), "Implementation_date": task["Implementation_date"], "title": task["title"], "description": task.get("description", ""), "completed": task["completed"]} for task in tasks]
 
 
 def update_task(collection: Collection, task_id: str, task: Task):
