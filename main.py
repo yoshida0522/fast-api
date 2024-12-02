@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from pymongo import MongoClient
 import os
 from dotenv import load_dotenv
-from models import User, Task
+from models import User, Task, Goal
 import crud
 
 load_dotenv()
@@ -13,6 +13,7 @@ client = MongoClient(MONGO_URI)
 db = client["API_DB"]
 user_collection = db["user"]
 task_collection = db["task"]
+goal_collection = db["goal"]
 
 app = FastAPI()
 
@@ -60,3 +61,23 @@ async def update_task(task_id: str, task: Task):
 @app.delete("/tasks/{task_id}")
 async def delete_task(task_id: str):
     return crud.delete_task(task_collection, task_id)
+
+
+@app.get("/goals")
+async def get_goals():
+    return crud.get_goals(goal_collection)
+
+
+@app.post("/goals")
+async def create_goal(goal: Goal):
+    return crud.create_goal(goal_collection, goal)
+
+
+@app.put("/goals/{goal_id}")
+async def update_goal(goal_id: str, goal: Goal):
+    return crud.update_goal(goal_collection, goal_id, goal)
+
+
+@app.delete("/goals/{goal_id}")
+async def delete_goal(goal_id: str):
+    return crud.delete_goal(goal_collection, goal_id)

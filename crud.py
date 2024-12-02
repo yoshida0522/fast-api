@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 from pymongo.collection import Collection
 from bson import ObjectId
-from models import User, Task
+from models import User, Task, Goal
 from fastapi.encoders import jsonable_encoder
 
 
@@ -47,7 +47,7 @@ def delete_user(collection: Collection, user_id: str):
 def create_task(collection: Collection, task: Task):
     task_dict = task.dict()
     result = collection.insert_one(task_dict)
-    task_dict["_id"] = str(result.inserted_id) 
+    task_dict["_id"] = str(result.inserted_id)
     return jsonable_encoder({"id": str(result.inserted_id), **task_dict})
 
 
@@ -71,3 +71,32 @@ def delete_task(collection: Collection, task_id: str):
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Task not found")
     return {"message": "Task deleted"}
+
+
+def create_goal(collection: Collection, goal: Goal):
+    goal_dict = goal.dict()
+    result = collection.insert_one(goal_dict)
+    goal_dict["_id"] = str(result.inserted_id)
+    return jsonable_encoder({"id": str(result.inserted_id), **goal_dict})
+
+
+def get_goals(collection: Collection):
+    goals = collection.find()
+    return [{"id": str(goal["_id"]), "daily": goal["daily"], "day_Time": goal.get("day_Time", ""), "process": goal["process"]} for goal in goals]
+
+
+def update_goal(collection: Collection, goal_id: str, goal: Goal):
+    result = collection.update_one(
+        {"_id": ObjectId(goal_id)},
+        {"$set": goal.dict(exclude_unset=True)}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Goal not found")
+    return {"id": goal_id, **goal.dict()}
+
+
+def delete_goal(collection: Collection, goal_id: str):
+    result = collection.delete_one({"_id": ObjectId(goal_id)})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Goal not found")
+    return {"message": "Goal deleted"}
