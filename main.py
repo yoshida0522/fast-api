@@ -1,13 +1,15 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware  # CORS ミドルウェアのインポート
 from pymongo import MongoClient
 import os
 from dotenv import load_dotenv
-from models import User, Task, Goal
+from models import User, Task, Goal, WorkflowInput
 import crud
 
 load_dotenv()
 
 MONGO_URI = os.getenv("MONGO_URI")
+DIFY_API_KEY = os.getenv("DIFY_API_KEY")
 
 client = MongoClient(MONGO_URI)
 db = client["API_DB"]
@@ -17,15 +19,36 @@ goal_collection = db["goal"]
 
 app = FastAPI()
 
+# CORS ミドルウェアの設定
+origins = [
+    "http://localhost:3000",
+    "http://localhost:3000/goals",
+    "https://fast-api-sandy.vercel.app/",  # 本番環境のURL
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,  # 許可するオリジン
+    allow_credentials=True,  # Cookie を許可する場合
+    allow_methods=["*"],  # 許可する HTTP メソッド
+    allow_headers=["*"],  # 許可する HTTP ヘッダー
+)
+
 
 @app.get("/")
 async def root():
     return {"message": "Fast API"}
 
 
-@app.get("/users")
-async def get_users():
-    return crud.get_users(user_collection)
+# @app.get("/users")
+# async def get_users():
+#     return crud.get_users(user_collection)
+@app.get("/user/{user_id}")
+async def get_user(user_id: str):
+    try:
+        return crud.get_user(user_collection, goal_collection, user_id)
+    except HTTPException as e:
+        return {"error": e.detail}
 
 
 @app.post("/users")
@@ -44,8 +67,8 @@ async def delete_user(user_id: str):
 
 
 @app.get("/tasks")
-async def get_tasks():
-    return crud.get_tasks(task_collection)
+async def get_task():
+    return crud.get_task(task_collection)
 
 
 @app.post("/tasks")
@@ -63,14 +86,20 @@ async def delete_task(task_id: str):
     return crud.delete_task(task_collection, task_id)
 
 
-@app.get("/goals")
-async def get_goals():
-    return crud.get_goals(goal_collection)
+# @app.get("/goals")
+# async def get_goals():
+#     return crud.get_goals(goal_collection)
 
 
+# @app.post("/goals")
+# async def create_goal(goal: Goal):
+#     return crud.create_goal(goal_collection, goal)
 @app.post("/goals")
-async def create_goal(goal: Goal):
-    return crud.create_goal(goal_collection, goal)
+async def create_goal_with_user_id(goal: Goal, user_id: str = Query(...)):
+    goal_dict = goal.dict()
+    goal_dict["user_id"] = user_id
+    goal_collection.insert_one(goal_dict)
+    return {"message": "Goal created with user_id"}
 
 
 @app.put("/goals/{goal_id}")

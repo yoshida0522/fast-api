@@ -12,13 +12,40 @@ def str_to_objectid(id: str) -> ObjectId:
         raise HTTPException(status_code=400, detail="Invalid ObjectId")
 
 
-def get_users(collection: Collection):
-    users = collection.find()
-    user_list = []
-    for user in users:
-        user["_id"] = str(user["_id"])
-        user_list.append(user)
-    return user_list
+# def get_users(collection: Collection):
+#     users = collection.find()
+#     user_list = []
+#     for user in users:
+#         user["_id"] = str(user["_id"])
+#         user_list.append(user)
+#     return user_list
+def get_user(user_collection: Collection, goal_collection: Collection, user_id: str):
+    try:
+        # MongoDBの_user_idを文字列に変換して比較
+        user_object_id = ObjectId(user_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid User ID format")
+
+    # user_collectionからユーザーを取得
+    user = user_collection.find_one({"_id": user_object_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # goal_collectionからゴール情報を取得
+    goal = goal_collection.find_one({"user_id": user_id})
+    if not goal:
+        raise HTTPException(status_code=404, detail="Goal not found")
+
+    # ユーザー情報とゴール情報を統合して返す
+    return {
+        "name": user.get("name"),
+        "email": user.get("email"),
+        "goal": goal.get("goal"),
+        "duration": goal.get("duration"),
+        "daily_time": goal.get("daily_time"),
+        "level": goal.get("level"),
+        "approach": goal.get("approach"),
+    }
 
 
 def create_user(collection: Collection, user: User):
@@ -51,7 +78,7 @@ def create_task(collection: Collection, task: Task):
     return jsonable_encoder({"id": str(result.inserted_id), **task_dict})
 
 
-def get_tasks(collection: Collection):
+def get_task(collection: Collection):
     tasks = collection.find()
     return [{"id": str(task["_id"]), "Implementation_date": task["Implementation_date"], "title": task["title"], "description": task.get("description", ""), "completed": task["completed"]} for task in tasks]
 
@@ -80,9 +107,22 @@ def create_goal(collection: Collection, goal: Goal):
     return jsonable_encoder({"id": str(result.inserted_id), **goal_dict})
 
 
-def get_goals(collection: Collection):
-    goals = collection.find()
-    return [{"id": str(goal["_id"]), "daily": goal["daily"], "day_Time": goal.get("day_Time", ""), "process": goal["process"]} for goal in goals]
+# def get_goals(collection: Collection):
+#     goals = collection.find()
+#     return [{"id": str(goal["_id"]), "daily": goal["daily"], "day_Time": goal.get("day_Time", ""), "process": goal["process"]} for goal in goals]
+def get_goal(collection: Collection, user_id: str):
+    user_object_id = str_to_objectid(user_id)
+    goals = collection.find({"user_id": user_object_id})
+    return [
+        {
+            "id": str(goal["_id"]),
+            "duration": goal["duration"],
+            "daily_time": goal.get("daily_time", ""),
+            "level": goal["level"],
+            "approach": goal["approach"]
+        }
+        for goal in goals
+    ]
 
 
 def update_goal(collection: Collection, goal_id: str, goal: Goal):

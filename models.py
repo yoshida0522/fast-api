@@ -15,7 +15,9 @@ class Task(BaseModel):
 
 
 class Goal(BaseModel):
+
     goal: str
-    daily: str
-    day_Time: str
-    process: str
+    duration: str
+    daily_time: str
+    level: str
+    approach: str
