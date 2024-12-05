@@ -8,16 +8,17 @@ class User(BaseModel):
 
 
 class Task(BaseModel):
+    user_id: str
     title: str
-    Implementation_date: str
+    implementation_date: str
     description: Optional[str] = None
     completed: bool = False
 
 
 class Goal(BaseModel):
-
     goal: str
     duration: str
     daily_time: str
     level: str
     approach: str
+    user_id: str

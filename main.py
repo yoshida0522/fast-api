@@ -1,9 +1,9 @@
 from fastapi import FastAPI, HTTPException, Query
-from fastapi.middleware.cors import CORSMiddleware  # CORS ミドルウェアのインポート
+from fastapi.middleware.cors import CORSMiddleware
 from pymongo import MongoClient
 import os
 from dotenv import load_dotenv
-from models import User, Task, Goal, WorkflowInput
+from models import User, Task, Goal
 import crud
 
 load_dotenv()
@@ -19,7 +19,6 @@ goal_collection = db["goal"]
 
 app = FastAPI()
 
-# CORS ミドルウェアの設定
 origins = [
     "http://localhost:3000",
     "http://localhost:3000/goals",
@@ -28,10 +27,11 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,  # 許可するオリジン
-    allow_credentials=True,  # Cookie を許可する場合
-    allow_methods=["*"],  # 許可する HTTP メソッド
-    allow_headers=["*"],  # 許可する HTTP ヘッダー
+    # allow_origins=origins,
+    allow_origins=["*"],  # 全てのオリジンを許可
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
@@ -40,10 +40,7 @@ async def root():
     return {"message": "Fast API"}
 
 
-# @app.get("/users")
-# async def get_users():
-#     return crud.get_users(user_collection)
-@app.get("/user/{user_id}")
+@app.get("/users/{user_id}")
 async def get_user(user_id: str):
     try:
         return crud.get_user(user_collection, goal_collection, user_id)
@@ -67,8 +64,8 @@ async def delete_user(user_id: str):
 
 
 @app.get("/tasks")
-async def get_task():
-    return crud.get_task(task_collection)
+async def get_task(user_id: str):
+    return crud.get_task(task_collection, user_id)
 
 
 @app.post("/tasks")
@@ -86,14 +83,11 @@ async def delete_task(task_id: str):
     return crud.delete_task(task_collection, task_id)
 
 
-# @app.get("/goals")
-# async def get_goals():
-#     return crud.get_goals(goal_collection)
+@app.get("/goals/{user_id}")
+async def get_goal(user_id: str):
+    return crud.get_goal(goal_collection, user_id)
 
 
-# @app.post("/goals")
-# async def create_goal(goal: Goal):
-#     return crud.create_goal(goal_collection, goal)
 @app.post("/goals")
 async def create_goal_with_user_id(goal: Goal, user_id: str = Query(...)):
     goal_dict = goal.dict()
