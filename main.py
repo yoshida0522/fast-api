@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Path
 from fastapi.middleware.cors import CORSMiddleware
 from pymongo import MongoClient
 import os
@@ -88,17 +88,27 @@ async def get_goal(user_id: str):
     return crud.get_goal(goal_collection, user_id)
 
 
-@app.post("/goals")
-async def create_goal_with_user_id(goal: Goal, user_id: str = Query(...)):
+# @app.post("/goals")
+# async def create_goal_with_user_id(goal: Goal, user_id: str = Query(...)):
+#     goal_dict = goal.dict()
+#     goal_dict["user_id"] = user_id
+#     goal_collection.insert_one(goal_dict)
+#     return {"message": "Goal created with user_id"}
+@app.post("/goals/{user_id}")
+# async def create_goal(goal: Goal, user_id: str = Query(...)):
+async def create_goal(goal: Goal, user_id: str = Path(...)):
     goal_dict = goal.dict()
     goal_dict["user_id"] = user_id
     goal_collection.insert_one(goal_dict)
     return {"message": "Goal created with user_id"}
 
 
-@app.put("/goals/{goal_id}")
-async def update_goal(goal_id: str, goal: Goal):
-    return crud.update_goal(goal_collection, goal_id, goal)
+# @app.put("/goals/{goal_id}")
+# async def update_goal(goal_id: str, goal: Goal):
+#     return crud.update_goal(goal_collection, goal_id, goal)
+@app.put("/goals/{user_id}")
+async def update_goal(user_id: str, goal: Goal):
+    return crud.update_goal(goal_collection, user_id, goal)
 
 
 @app.delete("/goals/{goal_id}")

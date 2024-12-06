@@ -113,6 +113,7 @@ def create_goal(collection: Collection, goal: Goal):
 def get_goal(collection: Collection, user_id: str) -> List[Dict]:
     goal = collection.find_one({"user_id": user_id})
     if goal is None:
+        print(f"Goal not found for user_id: {user_id}")
         return []
 
     return [
@@ -122,19 +123,28 @@ def get_goal(collection: Collection, user_id: str) -> List[Dict]:
             "duration": goal["duration"],
             "daily_time": goal["daily_time"],
             "level": goal["level"],
-            "approach": goal["approach"]
+            "approach": goal["approach"],
+            "user_id": goal["user_id"]
         }
     ]
 
 
-def update_goal(collection: Collection, goal_id: str, goal: Goal):
+# def update_goal(collection: Collection, goal_id: str, goal: Goal):
+#     result = collection.update_one(
+#         {"_id": ObjectId(goal_id)},
+#         {"$set": goal.dict(exclude_unset=True)}
+#     )
+#     if result.matched_count == 0:
+#         raise HTTPException(status_code=404, detail="Goal not found")
+#     return {"id": goal_id, **goal.dict()}
+def update_goal(collection: Collection, user_id: str, goal: Goal):
     result = collection.update_one(
-        {"_id": ObjectId(goal_id)},
+        {"user_id": user_id},
         {"$set": goal.dict(exclude_unset=True)}
     )
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Goal not found")
-    return {"id": goal_id, **goal.dict()}
+    return {"user_id": user_id, **goal.dict()}
 
 
 def delete_goal(collection: Collection, goal_id: str):
