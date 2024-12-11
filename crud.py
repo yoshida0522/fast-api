@@ -61,18 +61,22 @@ def delete_user(collection: Collection, user_id: str):
     return {"message": "User deleted"}
 
 
-def create_task(collection: Collection, task: Task):
-    task_dict = task.dict()
-    result = collection.insert_one(task_dict)
-    task_dict["_id"] = str(result.inserted_id)
-    return jsonable_encoder({"id": str(result.inserted_id), **task_dict})
+def create_task(collection: Collection, tasks: List[Task]):
+    try:
+        if not tasks:
+            raise ValueError("保存するタスクリストが空です。")
+        task_dicts = [task.dict() for task in tasks]
+        collection.insert_many(task_dicts)
+        return {"message": "タスクが保存されました"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"サーバーエラー: {str(e)}")
 
 
 def get_task(task_collection: Collection, user_id: str):
     tasks_cursor = task_collection.find({"user_id": user_id})
     tasks = list(tasks_cursor)
     if not tasks:
-        raise HTTPException(status_code=404, detail="Goal not found")
+        return []
     return [
         {
             "task_id": str(task["_id"]),
@@ -129,14 +133,6 @@ def get_goal(collection: Collection, user_id: str) -> List[Dict]:
     ]
 
 
-# def update_goal(collection: Collection, goal_id: str, goal: Goal):
-#     result = collection.update_one(
-#         {"_id": ObjectId(goal_id)},
-#         {"$set": goal.dict(exclude_unset=True)}
-#     )
-#     if result.matched_count == 0:
-#         raise HTTPException(status_code=404, detail="Goal not found")
-#     return {"id": goal_id, **goal.dict()}
 def update_goal(collection: Collection, user_id: str, goal: Goal):
     result = collection.update_one(
         {"user_id": user_id},

@@ -1,3 +1,4 @@
+from typing import List
 from fastapi import FastAPI, HTTPException, Path
 from fastapi.middleware.cors import CORSMiddleware
 from pymongo import MongoClient
@@ -68,9 +69,25 @@ async def get_task(user_id: str):
     return crud.get_task(task_collection, user_id)
 
 
-@app.post("/tasks")
-async def create_task(task: Task):
-    return crud.create_task(task_collection, task)
+@app.get("/tasks/{user_id}")
+def get_task(user_id: str):
+    tasks = list(task_collection.find(
+        {"user_id": user_id}, {"_id": 0, "completed": 1}))
+    return tasks
+
+
+@app.post("/save-tasks/")
+async def create_task(tasks: List[Task]):
+    if not tasks:
+        raise HTTPException(
+            status_code=400, detail="タスクリストが空です。正しいデータを送信してください。")
+
+    try:
+        result = crud.create_task(task_collection, tasks)
+        return result
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"タスク保存中にエラーが発生しました: {str(e)}")
 
 
 @app.put("/tasks/{task_id}")
@@ -88,14 +105,7 @@ async def get_goal(user_id: str):
     return crud.get_goal(goal_collection, user_id)
 
 
-# @app.post("/goals")
-# async def create_goal_with_user_id(goal: Goal, user_id: str = Query(...)):
-#     goal_dict = goal.dict()
-#     goal_dict["user_id"] = user_id
-#     goal_collection.insert_one(goal_dict)
-#     return {"message": "Goal created with user_id"}
 @app.post("/goals/{user_id}")
-# async def create_goal(goal: Goal, user_id: str = Query(...)):
 async def create_goal(goal: Goal, user_id: str = Path(...)):
     goal_dict = goal.dict()
     goal_dict["user_id"] = user_id
@@ -103,9 +113,6 @@ async def create_goal(goal: Goal, user_id: str = Path(...)):
     return {"message": "Goal created with user_id"}
 
 
-# @app.put("/goals/{goal_id}")
-# async def update_goal(goal_id: str, goal: Goal):
-#     return crud.update_goal(goal_collection, goal_id, goal)
 @app.put("/goals/{user_id}")
 async def update_goal(user_id: str, goal: Goal):
     return crud.update_goal(goal_collection, user_id, goal)
