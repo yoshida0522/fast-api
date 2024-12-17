@@ -2,7 +2,7 @@ from typing import Dict, List
 from fastapi import HTTPException
 from pymongo.collection import Collection
 from bson import ObjectId
-from models import User, Task, Goal
+from models import Graph, GraphData, User, Task, Goal
 from fastapi.encoders import jsonable_encoder
 
 
@@ -148,3 +148,51 @@ def delete_goal(collection: Collection, goal_id: str):
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Goal not found")
     return {"message": "Goal deleted"}
+
+
+def get_graph(user_id: str, graph_collection: Collection) -> List[Graph]:
+    try:
+        results = graph_collection.find(
+            {"user_id": user_id}, {"_id": 0, "task_date": 1, "completion_rate": 1}
+        )
+        data = [Graph(**result) for result in results]
+        return data
+    except Exception as e:
+        raise Exception(f"Error fetching graph data: {str(e)}")
+
+
+def update_graph(collection: Collection, user_id: str, filteredTasks: list, totalTasks: int, completedTasks: int, completionRate: float):
+    if not filteredTasks:
+        raise ValueError("Filtered tasks cannot be empty.")
+    if not isinstance(completionRate, float):
+        raise ValueError("Completion rate must be a float.")
+    if not isinstance(totalTasks, int) or not isinstance(completedTasks, int):
+        raise ValueError("Total tasks and completed tasks must be integers.")
+
+    # 既存のデータ更新処理
+    result = collection.update_one(
+        {"user_id": user_id},
+        {
+            "$set": {
+                "task_date": filteredTasks[0]["implementation_date"],
+                "total_task": totalTasks,
+                "completed_task": completedTasks,
+                "completion_rate": completionRate,
+            }
+        },
+        upsert=True
+    )
+
+    if result.matched_count == 0 and result.upserted_id is None:
+        raise HTTPException(
+            status_code=500, detail="Failed to update graph data")
+
+    updated_graph = collection.find_one({"user_id": user_id})
+
+    return {
+        "user_id": updated_graph["user_id"],
+        "task_date": updated_graph["task_date"],
+        "total_task": updated_graph["total_task"],
+        "completed_task": updated_graph["completed_task"],
+        "completion_rate": updated_graph["completion_rate"]
+    }

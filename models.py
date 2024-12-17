@@ -1,6 +1,5 @@
-from datetime import datetime
 from pydantic import BaseModel
-from typing import Optional
+from typing import List, Optional
 
 
 class User(BaseModel):
@@ -23,3 +22,17 @@ class Goal(BaseModel):
     level: str
     approach: str
     user_id: str
+
+
+class GraphData(BaseModel):
+    task_date: str
+    total_task: int
+    completed_task: int
+    completion_rate: float
+    user_id: str
+    filteredTasks: List[dict]
+
+
+class Graph(BaseModel):
+    task_date: str
+    completion_rate: float
