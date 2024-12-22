@@ -2,7 +2,7 @@ from typing import Dict, List
 from fastapi import HTTPException
 from pymongo.collection import Collection
 from bson import ObjectId
-from models import Graph, GraphData, User, Task, Goal
+from models import Graph,  User, Task, Goal
 from fastapi.encoders import jsonable_encoder
 
 
@@ -161,7 +161,7 @@ def get_graph(user_id: str, graph_collection: Collection) -> List[Graph]:
         raise Exception(f"Error fetching graph data: {str(e)}")
 
 
-def update_graph(collection: Collection, user_id: str, filteredTasks: list, totalTasks: int, completedTasks: int, completionRate: float):
+def create_graph(collection: Collection, user_id: str, filteredTasks: list, totalTasks: int, completedTasks: int, completionRate: float):
     if not filteredTasks:
         raise ValueError("Filtered tasks cannot be empty.")
     if not isinstance(completionRate, float):
@@ -169,30 +169,42 @@ def update_graph(collection: Collection, user_id: str, filteredTasks: list, tota
     if not isinstance(totalTasks, int) or not isinstance(completedTasks, int):
         raise ValueError("Total tasks and completed tasks must be integers.")
 
-    # 既存のデータ更新処理
-    result = collection.update_one(
-        {"user_id": user_id},
-        {
-            "$set": {
-                "task_date": filteredTasks[0]["implementation_date"],
-                "total_task": totalTasks,
-                "completed_task": completedTasks,
-                "completion_rate": completionRate,
-            }
-        },
-        upsert=True
-    )
+    # 新規データを作成する
+    new_data = {
+        "user_id": user_id,
+        "task_date": filteredTasks[0]["implementation_date"],
+        "total_task": totalTasks,
+        "completed_task": completedTasks,
+        "completion_rate": completionRate,
+        "tasks": filteredTasks,
+    }
 
-    if result.matched_count == 0 and result.upserted_id is None:
+    # コレクションにデータを追加
+    result = collection.insert_one(new_data)
+
+    if not result.acknowledged:
         raise HTTPException(
-            status_code=500, detail="Failed to update graph data")
+            status_code=500, detail="Failed to insert graph data"
+        )
 
-    updated_graph = collection.find_one({"user_id": user_id})
+    # 追加したデータを返す
+    inserted_graph = collection.find_one({"_id": result.inserted_id})
 
     return {
-        "user_id": updated_graph["user_id"],
-        "task_date": updated_graph["task_date"],
-        "total_task": updated_graph["total_task"],
-        "completed_task": updated_graph["completed_task"],
-        "completion_rate": updated_graph["completion_rate"]
+        "user_id": inserted_graph["user_id"],
+        "task_date": inserted_graph["task_date"],
+        "total_task": inserted_graph["total_task"],
+        "completed_task": inserted_graph["completed_task"],
+        "completion_rate": inserted_graph["completion_rate"]
     }
+
+
+def delete_graph_data(user_id, graph_collection):
+    try:
+        result = graph_collection.delete_many({"user_id": user_id})
+        if result.deleted_count > 0:
+            return {"message": "Graphデータの削除が成功しました"}
+        else:
+            raise HTTPException(status_code=404, detail="データが見つかりません")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"エラーが発生しました: {str(e)}")

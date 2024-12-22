@@ -134,22 +134,22 @@ async def delete_goal(goal_id: str):
 
 @app.get("/graph/{user_id}", response_model=List[Graph])
 async def get_graph_data(user_id: str):
-    try:
-        data = crud.get_graph(user_id, graph_collection)
-        if not data:
-            raise HTTPException(
-                status_code=404, detail="No data found for the given user_id")
-        return data
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error fetching data: {str(e)}")
+    data = crud.get_graph(user_id, graph_collection)
+    if not data:
+        return []
+    return data
 
 
-@app.put("/graph/{user_id}")
-async def update_graph(user_id: str, report: GraphData):
+@app.post("/graph/{user_id}")
+async def create_graph(user_id: str, report: GraphData):
     try:
-        return crud.update_graph(graph_collection, user_id, report.filteredTasks, report.total_task, report.completed_task, report.completion_rate)
+        return crud.create_graph(graph_collection, user_id, report.filteredTasks, report.total_task, report.completed_task, report.completion_rate)
     except Exception as e:
         print(f"Error in update_graph: {str(e)}")  # エラーログを出力
         raise HTTPException(
             status_code=500, detail=f"Failed to save progress report: {str(e)}")
+
+
+@app.delete("/graph/{user_id}")
+async def delete_graph_data(user_id: str):
+    return crud.delete_graph_data(user_id, graph_collection)
