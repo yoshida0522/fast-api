@@ -102,7 +102,7 @@ async def delete_task(task_id: str):
 
 @app.delete("/all-tasks/{user_id}")
 async def task_delete(user_id: str):
-    print(f"Received delete request for user_id: {user_id}")  # ここでログを追加
+    print(f"Received delete request for user_id: {user_id}")
     result = task_collection.delete_many({"user_id": user_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Tasks not found")
@@ -145,7 +145,7 @@ async def create_graph(user_id: str, report: GraphData):
     try:
         return crud.create_graph(graph_collection, user_id, report.filteredTasks, report.total_task, report.completed_task, report.completion_rate)
     except Exception as e:
-        print(f"Error in update_graph: {str(e)}")  # エラーログを出力
+        print(f"Error in update_graph: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Failed to save progress report: {str(e)}")
 

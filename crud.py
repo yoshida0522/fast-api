@@ -14,12 +14,7 @@ def str_to_objectid(id: str) -> ObjectId:
 
 
 def get_user(user_collection: Collection, goal_collection: Collection, user_id: str):
-    try:
-        user_object_id = ObjectId(user_id)
-    except Exception:
-        raise HTTPException(status_code=400, detail="Invalid User ID format")
-
-    user = user_collection.find_one({"_id": user_object_id})
+    user = user_collection.find_one({"user_id": user_id})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
@@ -30,6 +25,7 @@ def get_user(user_collection: Collection, goal_collection: Collection, user_id: 
     return {
         "name": user.get("name"),
         "email": user.get("email"),
+        "user_id": user.get("user_id"),
         "goal": goal.get("goal"),
         "duration": goal.get("duration"),
         "daily_time": goal.get("daily_time"),
@@ -39,7 +35,15 @@ def get_user(user_collection: Collection, goal_collection: Collection, user_id: 
 
 
 def create_user(collection: Collection, user: User):
-    result = collection.insert_one(user.dict())
+    existing_user = collection.find_one(
+        {"name": user.name, "email": user.email})
+
+    if existing_user:
+        raise HTTPException(
+            status_code=400, detail="User with this name and email already exists.")
+
+    user_dict = jsonable_encoder(user)
+    result = collection.insert_one(user_dict)
     return {"message": "User created", "id": str(result.inserted_id)}
 
 
@@ -169,7 +173,6 @@ def create_graph(collection: Collection, user_id: str, filteredTasks: list, tota
     if not isinstance(totalTasks, int) or not isinstance(completedTasks, int):
         raise ValueError("Total tasks and completed tasks must be integers.")
 
-    # 新規データを作成する
     new_data = {
         "user_id": user_id,
         "task_date": filteredTasks[0]["implementation_date"],
@@ -179,7 +182,6 @@ def create_graph(collection: Collection, user_id: str, filteredTasks: list, tota
         "tasks": filteredTasks,
     }
 
-    # コレクションにデータを追加
     result = collection.insert_one(new_data)
 
     if not result.acknowledged:
@@ -187,7 +189,6 @@ def create_graph(collection: Collection, user_id: str, filteredTasks: list, tota
             status_code=500, detail="Failed to insert graph data"
         )
 
-    # 追加したデータを返す
     inserted_graph = collection.find_one({"_id": result.inserted_id})
 
     return {
