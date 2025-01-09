@@ -73,7 +73,7 @@ async def get_task(user_id: str):
 @app.get("/tasks/{user_id}")
 def get_task(user_id: str):
     tasks = list(task_collection.find(
-        {"user_id": user_id}, {"_id": 0, "completed": 1}))
+        {"user_id": user_id}, {"_id": 0, "completed": 1, "implementation_date": 1}))
     return tasks
 
 
@@ -95,9 +95,9 @@ async def update_task(task_id: str, task: Task):
     return crud.update_task(task_collection, task_id, task)
 
 
-@app.delete("/tasks/{task_id}")
-async def delete_task(task_id: str):
-    return crud.delete_task(task_collection, task_id)
+# @app.delete("/tasks/{task_id}")
+# async def delete_task(task_id: str):
+#     return crud.delete_task(task_collection, task_id)
 
 
 @app.delete("/all-tasks/{user_id}")
@@ -127,9 +127,9 @@ async def update_goal(user_id: str, goal: Goal):
     return crud.update_goal(goal_collection, user_id, goal)
 
 
-@app.delete("/goals/{goal_id}")
-async def delete_goal(goal_id: str):
-    return crud.delete_goal(goal_collection, goal_id)
+# @app.delete("/goals/{goal_id}")
+# async def delete_goal(goal_id: str):
+#     return crud.delete_goal(goal_collection, goal_id)
 
 
 @app.get("/graph/{user_id}", response_model=List[Graph])

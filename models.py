@@ -23,6 +23,7 @@ class Goal(BaseModel):
     level: str
     approach: str
     user_id: str
+    date: str
 
 
 class GraphData(BaseModel):

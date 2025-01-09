@@ -132,7 +132,8 @@ def get_goal(collection: Collection, user_id: str) -> List[Dict]:
             "daily_time": goal["daily_time"],
             "level": goal["level"],
             "approach": goal["approach"],
-            "user_id": goal["user_id"]
+            "user_id": goal["user_id"],
+            "date": goal["date"]
         }
     ]
 
@@ -201,11 +202,7 @@ def create_graph(collection: Collection, user_id: str, filteredTasks: list, tota
 
 
 def delete_graph_data(user_id, graph_collection):
-    try:
-        result = graph_collection.delete_many({"user_id": user_id})
-        if result.deleted_count > 0:
-            return {"message": "Graphデータの削除が成功しました"}
-        else:
-            raise HTTPException(status_code=404, detail="データが見つかりません")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"エラーが発生しました: {str(e)}")
+    result = graph_collection.delete_many({"user_id": user_id})
+    if result.deleted_count > 0:
+        return {"message": "Graphデータの削除が成功しました"}
+    return
