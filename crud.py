@@ -19,19 +19,29 @@ def get_user(user_collection: Collection, goal_collection: Collection, user_id: 
         raise HTTPException(status_code=404, detail="User not found")
 
     goal = goal_collection.find_one({"user_id": user_id})
-    if not goal:
-        raise HTTPException(status_code=404, detail="Goal not found")
 
-    return {
-        "name": user.get("name"),
-        "email": user.get("email"),
-        "user_id": user.get("user_id"),
-        "goal": goal.get("goal"),
-        "duration": goal.get("duration"),
-        "daily_time": goal.get("daily_time"),
-        "level": goal.get("level"),
-        "approach": goal.get("approach"),
-    }
+    if goal:
+        return {
+            "name": user.get("name"),
+            "email": user.get("email"),
+            "user_id": user.get("user_id"),
+            "goal": goal.get("goal"),
+            "duration": goal.get("duration"),
+            "daily_time": goal.get("daily_time"),
+            "level": goal.get("level"),
+            "approach": goal.get("approach"),
+        }
+    else:
+        return {
+            "name": user.get("name"),
+            "email": user.get("email"),
+            "user_id": user.get("user_id"),
+            "goal": "",
+            "duration": "",
+            "daily_time": "",
+            "level": "",
+            "approach": "",
+        }
 
 
 def create_user(collection: Collection, user: User):
