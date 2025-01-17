@@ -24,7 +24,7 @@ app = FastAPI()
 origins = [
     "http://localhost:3000",
     "http://localhost:3000/goals",
-    "https://fast-api-sandy.vercel.app/",  # 本番環境のURL
+    "https://fast-api-sandy.vercel.app",  # 本番環境のURL
 ]
 
 app.add_middleware(
