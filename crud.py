@@ -49,8 +49,7 @@ def create_user(collection: Collection, user: User):
         {"name": user.name, "email": user.email})
 
     if existing_user:
-        raise HTTPException(
-            status_code=400, detail="User with this name and email already exists.")
+        return {"message": "すでに登録されています"}
 
     user_dict = jsonable_encoder(user)
     result = collection.insert_one(user_dict)
