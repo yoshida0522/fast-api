@@ -113,11 +113,16 @@ def update_task(collection: Collection, task_id: str, task: Task):
     return {"id": task_id, **task.dict()}
 
 
-def delete_task(collection: Collection, task_id: str):
-    result = collection.delete_one({"_id": ObjectId(task_id)})
+# def delete_task(collection: Collection, task_id: str):
+#     result = collection.delete_one({"_id": ObjectId(task_id)})
+#     if result.deleted_count == 0:
+#         raise HTTPException(status_code=404, detail="Task not found")
+#     return {"message": "Task deleted"}
+def delete_task(task_collection: Collection, user_id: str):
+    result = task_collection.delete_many({"user_id": user_id})
     if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Task not found")
-    return {"message": "Task deleted"}
+        return []
+    return {"message": f"{result.deleted_count} tasks deleted successfully"}
 
 
 def create_goal(collection: Collection, goal: Goal):
@@ -206,7 +211,7 @@ def create_graph(collection: Collection, user_id: str, filteredTasks: list, tota
         "task_date": inserted_graph["task_date"],
         "total_task": inserted_graph["total_task"],
         "completed_task": inserted_graph["completed_task"],
-        "completion_rate": inserted_graph["completion_rate"]
+        "completion_rate": inserted_graph["completion_rate"],
     }
 
 

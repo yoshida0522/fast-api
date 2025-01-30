@@ -102,12 +102,13 @@ async def update_task(task_id: str, task: Task):
 
 
 @app.delete("/all-tasks/{user_id}")
-async def task_delete(user_id: str):
-    print(f"Received delete request for user_id: {user_id}")
-    result = task_collection.delete_many({"user_id": user_id})
-    if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Tasks not found")
-    return {"message": f"{result.deleted_count} tasks deleted successfully"}
+async def delete_task(user_id: str):
+    return crud.delete_task(task_collection, user_id)
+    # print(f"Received delete request for user_id: {user_id}")
+    # result = task_collection.delete_many({"user_id": user_id})
+    # if result.deleted_count == 0:
+    #     raise HTTPException(status_code=404, detail="Tasks not found")
+    # return {"message": f"{result.deleted_count} tasks deleted successfully"}
 
 
 @app.get("/goals/{user_id}")
