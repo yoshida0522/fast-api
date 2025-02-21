@@ -1,5 +1,5 @@
 from typing import List
-from fastapi import FastAPI, HTTPException, Path
+from fastapi import Body, FastAPI, HTTPException, Path
 from fastapi.middleware.cors import CORSMiddleware
 from pymongo import MongoClient
 import os
@@ -32,7 +32,6 @@ app.add_middleware(
     CORSMiddleware,
     # allow_origins=origins,
     allow_origins=["*"],  # 全てのオリジンを許可
-    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -55,15 +54,14 @@ async def get_user(user_id: str):
 async def create_user(user: User):
     return crud.create_user(user_collection, user)
 
+# @app.put("/users/{user_id}")
+# async def update_user(user_id: str, user: User):
+#     return crud.update_user(user_collection, user_id, user)
 
-@app.put("/users/{user_id}")
-async def update_user(user_id: str, user: User):
-    return crud.update_user(user_collection, user_id, user)
 
-
-@app.delete("/users/{user_id}")
-async def delete_user(user_id: str):
-    return crud.delete_user(user_collection, user_id)
+# @app.delete("/users/{user_id}")
+# async def delete_user(user_id: str):
+#     return crud.delete_user(user_collection, user_id)
 
 
 @app.get("/tasks")
@@ -100,15 +98,9 @@ async def update_task(task_id: str, task: Task):
 # async def delete_task(task_id: str):
 #     return crud.delete_task(task_collection, task_id)
 
-
 @app.delete("/all-tasks/{user_id}")
 async def delete_task(user_id: str):
     return crud.delete_task(task_collection, user_id)
-    # print(f"Received delete request for user_id: {user_id}")
-    # result = task_collection.delete_many({"user_id": user_id})
-    # if result.deleted_count == 0:
-    #     raise HTTPException(status_code=404, detail="Tasks not found")
-    # return {"message": f"{result.deleted_count} tasks deleted successfully"}
 
 
 @app.get("/goals/{user_id}")
@@ -116,12 +108,22 @@ async def get_goal(user_id: str):
     return crud.get_goal(goal_collection, user_id)
 
 
+# @app.post("/goals/{user_id}")
+# async def create_goal(goal: Goal, user_id: str = Path(...)):
+#     goal_dict = goal.dict()
+#     goal_dict["user_id"] = user_id
+#     goal_collection.insert_one(goal_dict)
+#     return {"message": "Goal created with user_id"}
 @app.post("/goals/{user_id}")
-async def create_goal(goal: Goal, user_id: str = Path(...)):
-    goal_dict = goal.dict()
-    goal_dict["user_id"] = user_id
-    goal_collection.insert_one(goal_dict)
-    return {"message": "Goal created with user_id"}
+async def create_goal(user_id: str = Path(...), goal: Goal = Body(...)):
+    try:
+        goal_dict = goal.dict()
+        goal_dict["user_id"] = user_id
+        result = goal_collection.insert_one(goal_dict)
+        return {"message": "Goal created with user_id", "id": str(result.inserted_id)}
+    except Exception as e:
+        raise HTTPException(
+            status_code=422, detail=f"Error creating goal: {str(e)}")
 
 
 @app.put("/goals/{user_id}")
@@ -129,9 +131,9 @@ async def update_goal(user_id: str, goal: Goal):
     return crud.update_goal(goal_collection, user_id, goal)
 
 
-# @app.delete("/goals/{goal_id}")
-# async def delete_goal(goal_id: str):
-#     return crud.delete_goal(goal_collection, goal_id)
+@app.delete("/goals/{user_id}")
+async def delete_goal(user_id: str):
+    return crud.delete_goal(goal_collection, user_id)
 
 
 @app.get("/graph/{user_id}", response_model=List[Graph])

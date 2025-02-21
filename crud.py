@@ -56,14 +56,14 @@ def create_user(collection: Collection, user: User):
     return {"message": "User created", "id": str(result.inserted_id)}
 
 
-def update_user(collection: Collection, user_id: str, user: User):
-    user_object_id = str_to_objectid(user_id)
-    updated_data = user.dict()
-    result = collection.update_one(
-        {"_id": user_object_id}, {"$set": updated_data})
-    if result.matched_count == 0:
-        raise HTTPException(status_code=404, detail="User not found")
-    return {"message": "User updated"}
+# def update_user(collection: Collection, user_id: str, user: User):
+#     user_object_id = str_to_objectid(user_id)
+#     updated_data = user.dict()
+#     result = collection.update_one(
+#         {"_id": user_object_id}, {"$set": updated_data})
+#     if result.matched_count == 0:
+#         raise HTTPException(status_code=404, detail="User not found")
+#     return {"message": "User updated"}
 
 
 def delete_user(collection: Collection, user_id: str):
@@ -113,11 +113,6 @@ def update_task(collection: Collection, task_id: str, task: Task):
     return {"id": task_id, **task.dict()}
 
 
-# def delete_task(collection: Collection, task_id: str):
-#     result = collection.delete_one({"_id": ObjectId(task_id)})
-#     if result.deleted_count == 0:
-#         raise HTTPException(status_code=404, detail="Task not found")
-#     return {"message": "Task deleted"}
 def delete_task(task_collection: Collection, user_id: str):
     result = task_collection.delete_many({"user_id": user_id})
     if result.deleted_count == 0:
@@ -162,8 +157,8 @@ def update_goal(collection: Collection, user_id: str, goal: Goal):
     return {"user_id": user_id, **goal.dict()}
 
 
-def delete_goal(collection: Collection, goal_id: str):
-    result = collection.delete_one({"_id": ObjectId(goal_id)})
+def delete_goal(collection: Collection, user_id: str):
+    result = collection.delete_one({"user_id": user_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Goal not found")
     return {"message": "Goal deleted"}
@@ -219,4 +214,4 @@ def delete_graph_data(user_id, graph_collection):
     result = graph_collection.delete_many({"user_id": user_id})
     if result.deleted_count > 0:
         return {"message": "Graphデータの削除が成功しました"}
-    return
+    return {"message": "Graphデータが見つかりませんでした", "status": 204}
