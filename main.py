@@ -30,8 +30,7 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    # allow_origins=origins,
-    allow_origins=["*"],  # 全てのオリジンを許可
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -53,15 +52,6 @@ async def get_user(user_id: str):
 @app.post("/users")
 async def create_user(user: User):
     return crud.create_user(user_collection, user)
-
-# @app.put("/users/{user_id}")
-# async def update_user(user_id: str, user: User):
-#     return crud.update_user(user_collection, user_id, user)
-
-
-# @app.delete("/users/{user_id}")
-# async def delete_user(user_id: str):
-#     return crud.delete_user(user_collection, user_id)
 
 
 @app.get("/tasks")
@@ -94,10 +84,6 @@ async def update_task(task_id: str, task: Task):
     return crud.update_task(task_collection, task_id, task)
 
 
-# @app.delete("/tasks/{task_id}")
-# async def delete_task(task_id: str):
-#     return crud.delete_task(task_collection, task_id)
-
 @app.delete("/all-tasks/{user_id}")
 async def delete_task(user_id: str):
     return crud.delete_task(task_collection, user_id)
@@ -108,12 +94,6 @@ async def get_goal(user_id: str):
     return crud.get_goal(goal_collection, user_id)
 
 
-# @app.post("/goals/{user_id}")
-# async def create_goal(goal: Goal, user_id: str = Path(...)):
-#     goal_dict = goal.dict()
-#     goal_dict["user_id"] = user_id
-#     goal_collection.insert_one(goal_dict)
-#     return {"message": "Goal created with user_id"}
 @app.post("/goals/{user_id}")
 async def create_goal(user_id: str = Path(...), goal: Goal = Body(...)):
     try:

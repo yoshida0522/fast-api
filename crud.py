@@ -56,16 +56,6 @@ def create_user(collection: Collection, user: User):
     return {"message": "User created", "id": str(result.inserted_id)}
 
 
-# def update_user(collection: Collection, user_id: str, user: User):
-#     user_object_id = str_to_objectid(user_id)
-#     updated_data = user.dict()
-#     result = collection.update_one(
-#         {"_id": user_object_id}, {"$set": updated_data})
-#     if result.matched_count == 0:
-#         raise HTTPException(status_code=404, detail="User not found")
-#     return {"message": "User updated"}
-
-
 def delete_user(collection: Collection, user_id: str):
     user_object_id = str_to_objectid(user_id)
     result = collection.delete_one({"_id": user_object_id})
